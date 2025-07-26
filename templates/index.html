@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi-Share | 局域网共享与协作</title>
+    <!-- 引入 Font Awesome 6.1.1 图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+    <style>
+        /* CSS Variables for Theming */
+        :root {
+            --primary-color: #007bff;
+            --primary-dark-color: #0056b3;
+            --secondary-color: #6c757d;
+            --text-color: #343a40;
+            --text-light-color: #495057;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --border-color: #e9ecef;
+            --success-color: #28a745;
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --warning-color: #ffc107;
+            --hover-bg: #f1f1f1;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --placeholder-color: #adb5bd;
+        }
+
+        /* Dark Mode Variables */
+        body[data-theme='dark'] {
+            --primary-color: #66b3ff;
+            --primary-dark-color: #3385ff;
+            --secondary-color: #adb5bd;
+            --text-color: #e0e0e0;
+            --text-light-color: #ced4da;
+            --bg-color: #212529;
+            --card-bg: #343a40;
+            --border-color: #495057;
+            --success-color: #28a745; /* Can adjust these if needed */
+            --danger-color: #dc3545;
+            --info-color: #17a2b8;
+            --warning-color: #ffc107;
+            --hover-bg: #495057;
+            --shadow-color: rgba(0, 0, 0, 0.3);
+            --placeholder-color: #888e93;
+        }
+
+        /* Base Styles */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 0 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex-grow: 1; /* Allow container to grow */
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 2px 5px var(--shadow-color);
+            border-radius: 8px; /* Added for consistency */
+            margin-bottom: 20px; /* Separates header from main content */
+        }
+
+        .header h1 {
+            color: var(--primary-color);
+            margin: 0;
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header .controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            font-size: 1.2rem;
+            color: var(--text-light-color);
+            transition: color 0.2s ease;
+        }
+        .theme-toggle:hover {
+            color: var(--primary-color);
+        }
+
+        /* Card Styles */
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            padding: 25px;
+            transition: box-shadow 0.3s ease, background-color 0.3s ease;
+            margin-bottom: 0; /* Managed by container gap */
+        }
+        .card:hover {
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+        }
+        .card h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+        }
+
+        /* Form & Input Styles */
+        input[type="text"],
+        input[type="file"],
+        textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+        }
+        input[type="text"]::placeholder,
+        textarea::placeholder {
+            color: var(--placeholder-color);
+        }
+        input[type="text"]:focus,
+        textarea::focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.25);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+        button:hover {
+            background-color: var(--primary-dark-color);
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button:disabled {
+            background-color: var(--secondary-color);
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none;
+        }
+
+        .btn-danger {
+            background-color: var(--danger-color);
+        }
+        .btn-danger:hover {
+            background-color: #c82333;
+        }
+        .btn-secondary {
+            background-color: var(--secondary-color);
+        }
+        .btn-secondary:hover {
+            background-color: #5a6268;
+        }
+
+        /* Alerts & Status */
+        .status-message {
+            margin-top: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            opacity: 0; /* Start hidden */
+            max-height: 0;
+            overflow: hidden;
+            transition: opacity 0.3s ease, max-height 0.3s ease;
+        }
+        .status-message.show {
+            opacity: 1;
+            max-height: 50px; /* Adjust based on content height */
+        }
+        .status-message.success {
+            background-color: rgba(40, 167, 69, 0.1);
+            color: var(--success-color);
+        }
+        .status-message.error {
+            background-color: rgba(220, 53, 69, 0.1);
+            color: var(--danger-color);
+        }
+        .status-message.info {
+            background-color: rgba(23, 162, 184, 0.1);
+            color: var(--info-color);
+        }
+        .status-message.warning {
+            background-color: rgba(255, 193, 7, 0.1);
+            color: var(--warning-color);
+        }
+
+        /* QR Code Section */
+        #qr-code {
+            text-align: center;
+        }
+        #qr-code img {
+            max-width: 180px;
+            height: auto;
+            border: 8px solid var(--card-bg);
+            box-shadow: 0 4px 10px var(--shadow-color);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            transition: border-color 0.3s ease;
+        }
+        #qr-code p {
+            margin: 5px 0;
+            color: var(--text-light-color);
+        }
+        #qr-code strong {
+            color: var(--primary-color);
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            flex-wrap: wrap; /* Allow tabs to wrap on smaller screens */
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 2px 10px var(--shadow-color);
+            padding: 10px;
+            margin-bottom: 20px;
+            overflow-x: auto; /* Enable horizontal scrolling if tabs overflow */
+            -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+            scrollbar-width: none; /* Hide scrollbar for Firefox */
+        }
+        .tab-navigation::-webkit-scrollbar {
+            display: none; /* Hide scrollbar for Chrome, Safari */
+        }
+        .tab-navigation button {
+            flex: 1; /* Distribute space evenly */
+            min-width: 120px; /* Minimum width for each tab */
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease, color 0.2s ease;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            margin: 5px; /* Spacing between tabs */
+        }
+        .tab-navigation button.active {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+        }
+        .tab-navigation button:not(.active):hover {
+            background-color: var(--hover-bg);
+            color: var(--primary-color);
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-out;
+        }
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* File Upload */
+        #upload-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        #upload-form div, #create-folder-form {
+            display: flex;
+            gap: 10px;
+        }
+        #file-input-wrapper {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+        }
+        #file-input {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+            z-index: 10;
+        }
+        .custom-file-input-label {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            background-color: var(--hover-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            gap: 8px;
+            color: var(--text-light-color);
+            transition: background-color 0.2s ease, border-color 0.2s ease;
+        }
+        .custom-file-input-label:hover {
+            background-color: #e2e6ea;
+            border-color: var(--primary-color);
+        }
+        #selected-file-name {
+            font-size: 0.9rem;
+            color: var(--text-light-color);
+            margin-top: 5px;
+            word-break: break-all;
+        }
+
+
+        /* File List, Message Board, URL List common styles */
+        .item-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .item-list li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+            gap: 10px;
+            flex-wrap: wrap; /* Allow wrapping for item info and actions */
+        }
+        .item-list li:last-child {
+            border-bottom: none;
+        }
+        .item-list li:hover {
+            background-color: var(--hover-bg);
+        }
+        .item-list .item-info {
+            display: flex;
+            flex-direction: column; /* Stack name/link and meta vertically */
+            align-items: flex-start; /* Align icon and text at top */
+            gap: 4px; /* Smaller gap between name and meta */
+            flex-grow: 1;
+            word-break: break-word; /* Wrap long text */
+            flex-basis: 70%; /* Give more space to info */
+            font-size: 1rem;
+        }
+        .item-list .item-info .name-and-icon {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .item-list .item-info a {
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 500;
+        }
+        .item-list .item-meta { /* New for file metadata */
+            display: block; /* Make it block to go to new line */
+            font-size: 0.85rem;
+            color: var(--text-light-color);
+            /* margin-top: 4px; */ /* Space from file name - handled by flex gap */
+        }
+        .item-list .item-actions {
+            display: flex;
+            gap: 5px;
+            flex-shrink: 0; /* Prevent actions from shrinking */
+            flex-basis: 25%; /* Give enough space for buttons */
+            justify-content: flex-end; /* Align actions to the right */
+        }
+        .item-list .item-actions button {
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            border-radius: 6px;
+        }
+        .item-list .item-actions button .fa-solid {
+            margin-right: 0; /* No text, just icon */
+        }
+        .no-items {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-light-color);
+            font-style: italic;
+        }
+        .file-icon {
+            color: var(--secondary-color);
+            font-size: 1.2em;
+        }
+        .folder-icon {
+            color: var(--warning-color); /* Yellow for folders */
+            font-size: 1.2em;
+        }
+
+        /* Move Modal */
+        #move-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1010;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #move-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        #move-prompt {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 30px var(--shadow-color);
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        #move-modal.show #move-prompt {
+            transform: translateY(0);
+        }
+        #move-prompt h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.6rem;
+            margin-bottom: 20px;
+        }
+        #move-prompt input {
+            margin-bottom: 15px;
+        }
+        #move-prompt button {
+            width: 100%;
+            padding: 12px 20px;
+        }
+        #move-prompt .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        #move-prompt .button-group button {
+            flex: 1;
+        }
+
+
+        /* Chat Box */
+        #chat-box {
+            height: 300px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow-y: auto;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            scroll-behavior: smooth;
+        }
+        #chat-box p {
+            margin: 0;
+            padding: 8px 12px;
+            border-radius: 15px;
+            max-width: 70%;
+            word-break: break-word;
+        }
+        .notification {
+            color: var(--secondary-color);
+            font-style: italic;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+        .my-message {
+            align-self: flex-end;
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom-right-radius: 0;
+        }
+        .other-message {
+            align-self: flex-start;
+            background-color: var(--hover-bg);
+            color: var(--text-color);
+            border-bottom-left-radius: 0;
+        }
+        .other-message strong {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-light-color);
+            margin-bottom: 3px;
+        }
+        #chat-controls {
+            display: flex;
+            gap: 10px;
+        }
+        #message-input {
+            flex-grow: 1;
+        }
+
+        /* Message Board */
+        #message-board-list ul {
+            max-height: 400px; /* Limit height and scroll */
+            overflow-y: auto;
+            padding-right: 10px; /* For scrollbar */
+        }
+        #message-board-list li {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+            padding: 10px 0;
+        }
+        #message-board-list .msg-meta {
+            font-size: 0.85rem;
+            color: var(--text-light-color);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+        }
+        #message-board-list .msg-meta .msg-timestamp {
+            font-size: 0.8em;
+            color: var(--secondary-color);
+        }
+        #message-board-list .msg-content {
+            font-size: 1rem;
+            color: var(--text-color);
+            width: 100%;
+        }
+        #message-board-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        /* Profile Section */
+        #profile-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        #profile-section input {
+            margin-bottom: 15px;
+        }
+        #profile-display {
+            font-size: 1.1rem;
+            margin-top: 10px;
+            padding: 10px 0;
+            color: var(--primary-color);
+            font-weight: bold;
+        }
+
+        /* Nickname Modal */
+        #nickname-modal {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #nickname-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        #nickname-prompt {
+            background: var(--card-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 30px var(--shadow-color);
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+        #nickname-modal.show #nickname-prompt {
+            transform: translateY(0);
+        }
+        #nickname-prompt h2 {
+            margin-top: 0;
+            color: var(--primary-color);
+            font-size: 1.6rem;
+        }
+        #nickname-prompt input {
+            margin-bottom: 20px;
+        }
+        #nickname-prompt button {
+            width: 100%;
+            padding: 12px 20px;
+        }
+
+        /* Bottom Navigation for Mobile */
+        .bottom-nav {
+            display: none; /* Hidden by default */
+            background-color: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            box-shadow: 0 -2px 10px var(--shadow-color);
+            position: sticky; /* Or fixed, depending on desired behavior */
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 8px 0;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 900;
+        }
+        .bottom-nav button {
+            background-color: transparent;
+            color: var(--text-light-color);
+            border: none;
+            padding: 8px 5px;
+            font-size: 0.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s ease;
+            min-width: 60px; /* Ensure buttons are tappable */
+        }
+        .bottom-nav button .fa-solid {
+            font-size: 1.2rem;
+            margin-bottom: 2px;
+        }
+        .bottom-nav button.active {
+            color: var(--primary-color);
+        }
+        .bottom-nav button:hover:not(.active) {
+            color: var(--primary-dark-color);
+        }
+
+        /* Media Queries for Responsiveness */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                padding: 15px;
+                margin-bottom: 15px;
+                border-radius: 0; /* Full width on small screens */
+            }
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            .header .controls {
+                width: 100%;
+                justify-content: flex-end; /* Align controls to right */
+            }
+            .container {
+                margin: 0;
+                padding: 15px;
+                gap: 15px;
+                padding-bottom: 70px; /* Space for bottom nav */
+            }
+            .tab-navigation {
+                display: none; /* Hide top tabs on mobile */
+            }
+            .bottom-nav {
+                display: flex; /* Show bottom tabs on mobile */
+            }
+            .card {
+                padding: 20px;
+                border-radius: 8px;
+            }
+            .card h2 {
+                font-size: 1.3rem;
+                margin-bottom: 15px;
+            }
+            #qr-code img {
+                max-width: 120px;
+            }
+            #upload-form div, #create-folder-form {
+                flex-direction: column; /* Stack input and button */
+                gap: 15px;
+            }
+            #upload-form button, #create-folder-form button {
+                width: 100%; /* Make button full width */
+            }
+            .custom-file-input-label {
+                width: 100%;
+            }
+            .item-list li {
+                flex-direction: column; /* Stack info and actions vertically */
+                align-items: flex-start; /* Align contents to start */
+            }
+            .item-list .item-info {
+                flex-basis: 100%; /* Full width for info */
+                margin-bottom: 8px; /* Space between info and actions */
+            }
+            .item-list .item-actions {
+                flex-basis: 100%; /* Full width for actions */
+                justify-content: flex-start; /* Align actions to the left */
+            }
+            .my-message, .other-message {
+                max-width: 85%; /* Adjust max-width for chat bubbles */
+            }
+            #nickname-prompt {
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 昵称输入弹窗 -->
+    <div id="nickname-modal">
+        <div id="nickname-prompt">
+            <h2><i class="fa-solid fa-user-circle"></i> 欢迎加入</h2>
+            <p>请为自己取一个昵称：</p>
+            <input type="text" id="nickname-input" placeholder="例如：匿名用户" maxlength="15">
+            <button onclick="joinChat()">开始使用</button>
+        </div>
+    </div>
+
+    <!-- Move Item Modal -->
+    <div id="move-modal">
+        <div id="move-prompt">
+            <h2 id="move-item-title">移动文件/文件夹</h2>
+            <p id="move-item-name-display"></p>
+            <input type="text" id="destination-folder-input" placeholder="输入目标文件夹名称" required>
+            <div class="button-group">
+                <button class="btn-secondary" onclick="closeMoveModal()"><i class="fa-solid fa-times"></i> 取消</button>
+                <button onclick="confirmMoveItem()"><i class="fa-solid fa-arrows-alt"></i> 移动</button>
+            </div>
+            <div id="move-status" class="status-message"></div>
+        </div>
+    </div>
+
+
+    <header class="header">
+        <h1><i class="fa-solid fa-wifi"></i> WiFi-Share</h1>
+        <div class="controls">
+            <i id="theme-toggle" class="fa-solid fa-moon theme-toggle" title="切换主题"></i>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Tab Navigation (Desktop Only) -->
+        <nav class="tab-navigation" id="desktop-tab-nav">
+            <button class="tab-button active" data-target="home-section"><i class="fa-solid fa-home"></i> 主页</button>
+            <button class="tab-button" data-target="files-section"><i class="fa-solid fa-folder-open"></i> 文件</button>
+            <button class="tab-button" data-target="chat-section"><i class="fa-solid fa-comments"></i> 聊天</button>
+            <button class="tab-button" data-target="message-board-section"><i class="fa-solid fa-clipboard-list"></i> 留言板</button>
+            <button class="tab-button" data-target="urls-section"><i class="fa-solid fa-link"></i> 网址</button>
+            <button class="tab-button" data-target="profile-section"><i class="fa-solid fa-user"></i> 个人资料</button>
+        </nav>
+
+        <!-- Home Section -->
+        <div class="content-section active" id="home-section">
+            <div class="card" id="qr-code">
+                <h2><i class="fa-solid fa-qrcode"></i> 手机扫码访问</h2>
+                <img src="/qr" alt="QR Code">
+                <p>手机和电脑连接同一WiFi后，扫描上方二维码即可访问。</p>
+                <p>或者在浏览器输入: <strong>http://{{ server_ip }}:5000</strong></p>
+            </div>
+            <div class="card">
+                <h2><i class="fa-solid fa-info-circle"></i> 关于本应用</h2>
+                <p>这是一个简单的局域网文件共享和实时协作工具，旨在方便同一WiFi网络下的设备进行文件传输、实时聊天、留言交流和网址分享。</p>
+                <p>所有文件和数据仅在您的局域网内传输，不会上传到任何外部服务器。</p>
+            </div>
+        </div>
+        
+        <!-- Files Section -->
+        <div class="content-section" id="files-section">
+            <div class="card">
+                <h2><i class="fa-solid fa-cloud-upload-alt"></i> 上传文件</h2>
+                <form id="upload-form" enctype="multipart/form-data">
+                    <div id="file-input-wrapper">
+                        <input type="file" name="file" id="file-input" required>
+                        <label for="file-input" class="custom-file-input-label">
+                            <i class="fa-solid fa-folder-plus"></i> 选择文件...
+                        </label>
+                    </div>
+                    <button type="submit" id="upload-btn"><i class="fa-solid fa-paper-plane"></i> 上传</button>
+                </form>
+                <p id="selected-file-name">未选择文件</p>
+                <div id="upload-status" class="status-message"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-folder-plus"></i> 创建文件夹</h2>
+                <form id="create-folder-form">
+                    <input type="text" id="folder-name-input" placeholder="请输入文件夹名称" required>
+                    <button type="submit"><i class="fa-solid fa-folder-plus"></i> 创建</button>
+                </form>
+                <div id="folder-status" class="status-message"></div>
+            </div>
+
+            <div class="card">
+                <h2><i class="fa-solid fa-list-alt"></i> 文件/文件夹列表</h2>
+                <div id="file-list" class="item-list"></div>
+            </div>
+        </div>
+
+        <!-- Chat Section -->
+        <div class="content-section" id="chat-section">
+            <div class="card">
+                <h2><i class="fa-solid fa-comments"></i> 实时群聊 <span id="ws-status" style="font-size:0.8em; font-weight:normal; color:var(--text-light-color);"></span></h2>
+                <div id="chat-box"></div>
+                <div id="chat-controls">
+                    <input type="text" id="message-input" placeholder="输入消息..." disabled>
+                    <button onclick="sendMessage()" id="send-btn" disabled><i class="fa-solid fa-share"></i> 发送</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Message Board Section -->
+        <div class="content-section" id="message-board-section">
+            <div class="card">
+                <h2><i class="fa-solid fa-message"></i> 留言板</h2>
+                <div id="message-board-list" class="item-list"></div>
+                <form id="message-board-form">
+                    <h3>发表新留言</h3>
+                    <textarea id="message-board-input" placeholder="在这里写下您的留言..." maxlength="500" required></textarea>
+                    <button type="submit"><i class="fa-solid fa-paper-plane"></i> 发表留言</button>
+                </form>
+                <div id="message-board-status" class="status-message"></div>
+            </div>
+        </div>
+
+        <!-- URLs Section -->
+        <div class="content-section" id="urls-section">
+            <div class="card">
+                <h2><i class="fa-solid fa-globe"></i> 网址分享</h2>
+                <form id="url-share-form">
+                    <h3>分享新网址</h3>
+                    <input type="text" id="url-input" placeholder="输入网址，例如：https://www.google.com" required>
+                    <input type="text" id="url-title-input" placeholder="网址标题（可选）" maxlength="100">
+                    <button type="submit"><i class="fa-solid fa-link"></i> 分享网址</button>
+                </form>
+                <div id="url-share-status" class="status-message"></div>
+                <div id="url-list" class="item-list" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Profile Section -->
+        <div class="content-section" id="profile-section">
+            <div class="card">
+                <h2><i class="fa-solid fa-user-cog"></i> 个人资料</h2>
+                <label for="profile-nickname-input">您的昵称：</label>
+                <input type="text" id="profile-nickname-input" placeholder="设置您的昵称" maxlength="15">
+                <button onclick="saveNickname()"><i class="fa-solid fa-save"></i> 保存昵称</button>
+                <p id="profile-display">当前昵称：<span id="current-nickname"></span></p>
+                <div id="profile-status" class="status-message"></div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="bottom-nav" id="mobile-bottom-nav">
+        <button class="tab-button active" data-target="home-section"><i class="fa-solid fa-home"></i> 主页</button>
+        <button class="tab-button" data-target="files-section"><i class="fa-solid fa-folder-open"></i> 文件</button>
+        <button class="tab-button" data-target="chat-section"><i class="fa-solid fa-comments"></i> 聊天</button>
+        <button class="tab-button" data-target="message-board-section"><i class="fa-solid fa-clipboard-list"></i> 留言</button>
+        <button class="tab-button" data-target="urls-section"><i class="fa-solid fa-link"></i> 网址</button>
+        <button class="tab-button" data-target="profile-section"><i class="fa-solid fa-user"></i> 我</button>
+    </nav>
+
+
+    <script>
+        const serverIp = "{{ server_ip }}";
+        const wsPort = 8765; // WebSocket port
+        const httpPort = 5000; // HTTP port
+        const wsUrl = `ws://${serverIp}:${wsPort}`;
+        let ws;
+        let nickname = localStorage.getItem('wifiShareNickname') || ''; // Load nickname from local storage
+
+        // --- DOM Elements ---
+        const nicknameModal = document.getElementById('nickname-modal');
+        const nicknameInput = document.getElementById('nickname-input');
+        const themeToggle = document.getElementById('theme-toggle');
+
+        // Tab Navigation
+        const desktopTabNav = document.getElementById('desktop-tab-nav');
+        const mobileBottomNav = document.getElementById('mobile-bottom-nav');
+        const contentSections = document.querySelectorAll('.content-section');
+
+        // Home Section
+        // (No specific DOM elements needed beyond the section itself)
+
+        // File Management
+        const uploadForm = document.getElementById('upload-form');
+        const fileInput = document.getElementById('file-input');
+        const selectedFileName = document.getElementById('selected-file-name');
+        const uploadStatus = document.getElementById('upload-status');
+        const fileList = document.getElementById('file-list');
+        const createFolderForm = document.getElementById('create-folder-form');
+        const folderNameInput = document.getElementById('folder-name-input');
+        const folderStatus = document.getElementById('folder-status');
+
+        // Move Item Modal
+        const moveModal = document.getElementById('move-modal');
+        const moveItemNameDisplay = document.getElementById('move-item-name-display');
+        const destinationFolderInput = document.getElementById('destination-folder-input');
+        const moveStatus = document.getElementById('move-status');
+        let currentItemToMove = null; // To store the item's name being moved
+
+        // Chat
+        const chatBox = document.getElementById('chat-box');
+        const messageInput = document.getElementById('message-input');
+        const sendBtn = document.getElementById('send-btn');
+        const wsStatusDisplay = document.getElementById('ws-status');
+
+        // Message Board
+        const messageBoardList = document.getElementById('message-board-list');
+        const messageBoardForm = document.getElementById('message-board-form');
+        const messageBoardInput = document.getElementById('message-board-input');
+        const messageBoardStatus = document.getElementById('message-board-status');
+
+
+        // URL Share
+        const urlShareForm = document.getElementById('url-share-form');
+        const urlInput = document.getElementById('url-input');
+        const urlTitleInput = document.getElementById('url-title-input');
+        const urlList = document.getElementById('url-list');
+        const urlShareStatus = document.getElementById('url-share-status');
+
+
+        // Profile
+        const profileNicknameInput = document.getElementById('profile-nickname-input');
+        const currentNicknameDisplay = document.getElementById('current-nickname');
+        const profileStatus = document.getElementById('profile-status');
+
+        // --- Utility Functions ---
+        function showStatus(element, message, type = 'info', duration = 3000) {
+            element.textContent = message;
+            element.className = `status-message show ${type}`;
+            setTimeout(() => {
+                element.className = 'status-message';
+            }, duration);
+        }
+
+        // --- Theme Toggle ---
+        function applyTheme(theme) {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('wifiShareTheme', theme); // Save theme preference
+            themeToggle.classList.remove('fa-sun', 'fa-moon');
+            if (theme === 'dark') {
+                themeToggle.classList.add('fa-sun');
+                themeToggle.title = '切换到浅色模式';
+            } else {
+                themeToggle.classList.add('fa-moon');
+                themeToggle.title = '切换到深色模式';
+            }
+        }
+
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            applyTheme(newTheme);
+        });
+
+        // Load theme on start
+        const savedTheme = localStorage.getItem('wifiShareTheme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        applyTheme(savedTheme);
+
+
+        // --- Tab Switching ---
+        function activateTab(targetId) {
+            // Deactivate all content sections
+            contentSections.forEach(section => section.classList.remove('active'));
+            // Activate the target section
+            document.getElementById(targetId).classList.add('active');
+
+            // Update active state for desktop tabs
+            desktopTabNav.querySelectorAll('.tab-button').forEach(button => {
+                if (button.dataset.target === targetId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+            // Update active state for mobile bottom tabs
+            mobileBottomNav.querySelectorAll('.tab-button').forEach(button => {
+                if (button.dataset.target === targetId) {
+                    button.classList.add('active');
+                } else {
+                    button.classList.remove('active');
+                }
+            });
+        }
+
+        // Set default active tab on load
+        document.addEventListener('DOMContentLoaded', () => {
+            activateTab('home-section'); // Default to home page
+        });
+
+
+        document.querySelectorAll('.tab-button').forEach(button => {
+            button.addEventListener('click', () => {
+                activateTab(button.dataset.target);
+            });
+        });
+
+        // --- Profile and Nickname Management ---
+        function updateProfileDisplay() {
+            currentNicknameDisplay.textContent = nickname || '未设置';
+            profileNicknameInput.value = nickname;
+        }
+
+        function saveNickname() {
+            const newNickname = profileNicknameInput.value.trim();
+            if (newNickname) {
+                nickname = newNickname;
+                localStorage.setItem('wifiShareNickname', nickname);
+                updateProfileDisplay();
+                showStatus(profileStatus, '昵称已保存！', 'success');
+            } else {
+                showStatus(profileStatus, '昵称不能为空！', 'error');
+            }
+        }
+
+        function joinChat() {
+            const tempNickname = nicknameInput.value.trim();
+            if (tempNickname) {
+                nickname = tempNickname;
+                localStorage.setItem('wifiShareNickname', nickname);
+                nicknameModal.classList.remove('show');
+                initWebSocket();
+                updateProfileDisplay();
+            } else {
+                alert('请输入一个昵称！');
+                nicknameInput.focus();
+            }
+        }
+
+        // --- WebSocket Communication ---
+        function updateWsStatus(status) {
+            wsStatusDisplay.textContent = status;
+            switch(status) {
+                case '已连接': wsStatusDisplay.style.color = 'var(--success-color)'; break;
+                case '连接中...': wsStatusDisplay.style.color = 'var(--info-color)'; break;
+                case '已断开': wsStatusDisplay.style.color = 'var(--danger-color)'; break;
+                default: wsStatusDisplay.style.color = 'var(--text-light-color)'; break;
+            }
+        }
+
+        function initWebSocket() {
+            updateWsStatus('连接中...');
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket 连接成功');
+                ws.send(JSON.stringify({ type: 'join', nickname: nickname }));
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                updateWsStatus('已连接');
+                addNotificationToChat('连接成功，可以开始聊天。');
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                switch (data.type) {
+                    case 'notification':
+                        addNotificationToChat(data.message);
+                        break;
+                    case 'message':
+                        addMessageToChat(data.sender, data.message, data.sender === nickname);
+                        break;
+                    case 'file_update':
+                        fetchFiles(); // File list needs refresh
+                        break;
+                    case 'message_board_update':
+                        fetchMessages(); // Message board needs refresh
+                        break;
+                    case 'url_update':
+                        fetchUrls(); // URL list needs refresh
+                        break;
+                }
+            };
+
+            ws.onclose = () => {
+                updateWsStatus('已断开');
+                addNotificationToChat('与服务器的连接已断开。');
+                messageInput.disabled = true;
+                sendBtn.disabled = true;
+                console.warn('WebSocket 连接关闭，尝试重连...');
+                // Optional: Implement reconnect logic with a delay
+                // setTimeout(initWebSocket, 3000); // Reconnect after 3 seconds
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket 错误:', error);
+                updateWsStatus('连接错误');
+                addNotificationToChat('无法连接到消息服务器，请检查后端和防火墙设置。');
+            };
+        }
+
+        function sendMessage() {
+            const message = messageInput.value.trim();
+            if (message && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'message', message: message }));
+                // addMessageToChat(nickname, message, true); // No need to add instantly, wait for server echo
+                messageInput.value = '';
+            }
+        }
+
+        messageInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        function addMessageToChat(sender, message, isMe) {
+            const p = document.createElement('p');
+            p.className = isMe ? 'my-message' : 'other-message';
+            if (!isMe) {
+                const strong = document.createElement('strong');
+                strong.textContent = sender; // XSS Safe
+                p.appendChild(strong);
+            }
+            const span = document.createElement('span');
+            span.textContent = message; // XSS Safe
+            p.appendChild(span);
+            chatBox.appendChild(p);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function addNotificationToChat(message) {
+            const p = document.createElement('p');
+            p.className = 'notification';
+            p.textContent = message; // XSS Safe
+            chatBox.appendChild(p);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+
+        // --- File Operations ---
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                selectedFileName.textContent = `已选择文件: ${e.target.files[0].name}`;
+            } else {
+                selectedFileName.textContent = '未选择文件';
+            }
+        });
+
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!fileInput.files.length) {
+                showStatus(uploadStatus, '请选择一个文件！', 'warning');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+
+            showStatus(uploadStatus, '正在上传...', 'info');
+            try {
+                const response = await fetch('/upload', { method: 'POST', body: formData });
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus(uploadStatus, result.success, 'success');
+                } else {
+                    showStatus(uploadStatus, result.error, 'error');
+                }
+            } catch (error) {
+                showStatus(uploadStatus, '上传失败，请检查服务器连接。', 'error');
+            } finally {
+                uploadForm.reset();
+                selectedFileName.textContent = '未选择文件';
+            }
+        });
+
+        // --- Create Folder Operation ---
+        createFolderForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const folderName = folderNameInput.value.trim();
+            if (!folderName) {
+                showStatus(folderStatus, '文件夹名称不能为空！', 'warning');
+                return;
+            }
+
+            showStatus(folderStatus, '正在创建文件夹...', 'info');
+            try {
+                const response = await fetch('/api/folders', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: folderName })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus(folderStatus, result.success, 'success');
+                    folderNameInput.value = '';
+                } else {
+                    showStatus(folderStatus, result.error, 'error');
+                }
+            } catch (error) {
+                showStatus(folderStatus, '创建文件夹失败，请检查服务器连接。', 'error');
+            }
+        });
+
+        // --- FETCH FILES (XSS FIX & File Size Display, Upload Time, Download Count) ---
+        async function fetchFiles() {
+            try {
+                const response = await fetch('/files');
+                if (!response.ok) throw new Error('Network response was not ok.');
+                const items = await response.json();
+                
+                // Clear previous list
+                fileList.innerHTML = ''; 
+
+                if (items.length === 0) {
+                    const noItemsP = document.createElement('p');
+                    noItemsP.className = 'no-items';
+                    noItemsP.innerHTML = '<i class="fa-solid fa-box-open"></i> 暂无共享文件或文件夹。'; 
+                    fileList.appendChild(noItemsP);
+                } else {
+                    // Sort items: folders first, then files, both alphabetically
+                    items.sort((a, b) => {
+                        if (a.type === 'folder' && b.type !== 'folder') return -1;
+                        if (a.type !== 'folder' && b.type === 'folder') return 1;
+                        return a.name.localeCompare(b.name);
+                    });
+
+                    const ul = document.createElement('ul');
+                    items.forEach(item => {
+                        const li = document.createElement('li');
+
+                        const itemInfoDiv = document.createElement('div');
+                        itemInfoDiv.className = 'item-info';
+
+                        const nameAndIconDiv = document.createElement('div');
+                        nameAndIconDiv.className = 'name-and-icon';
+
+                        const icon = document.createElement('i');
+                        icon.classList.add('fa-solid');
+                        if (item.type === 'file') {
+                            icon.classList.add('fa-file', 'file-icon');
+                        } else if (item.type === 'folder') {
+                            icon.classList.add('fa-folder', 'folder-icon');
+                        }
+                        nameAndIconDiv.appendChild(icon);
+
+                        const link = document.createElement('a');
+                        link.textContent = item.name; // Use textContent for user-provided data (XSS protection)
+                        if (item.type === 'file') {
+                            // Encode filename for URL to handle special characters safely
+                            link.href = `http://${serverIp}:${httpPort}/download/${encodeURIComponent(item.name)}`; 
+                            link.target = '_blank'; // Open in new tab for downloads
+                            link.rel = 'noopener noreferrer'; // Security best practice
+                        } else if (item.type === 'folder') {
+                            link.href = '#'; // Folders are not directly clickable as URLs in this view
+                        }
+                        nameAndIconDiv.appendChild(link);
+                        itemInfoDiv.appendChild(nameAndIconDiv);
+                        
+                        // Add metadata like size, upload time, download count
+                        if (item.type === 'file') {
+                            const metaSpan = document.createElement('span');
+                            metaSpan.className = 'item-meta';
+                            let metaText = `大小: ${item.formatted_size}`;
+                            if (item.formatted_upload_time) {
+                                metaText += ` | 上传于: ${item.formatted_upload_time}`;
+                            }
+                            if (typeof item.download_count === 'number') {
+                                metaText += ` | 下载量: ${item.download_count}`;
+                            }
+                            metaSpan.textContent = metaText; // XSS safe
+                            itemInfoDiv.appendChild(metaSpan); 
+                        }
+
+
+                        const itemActionsDiv = document.createElement('div');
+                        itemActionsDiv.className = 'item-actions';
+
+                        // Copy Link Button
+                        if (item.type === 'file') {
+                            const copyBtn = document.createElement('button');
+                            copyBtn.className = 'btn-secondary';
+                            copyBtn.title = '复制下载链接';
+                            copyBtn.onclick = () => copyLink(item.name);
+                            const copyIcon = document.createElement('i');
+                            copyIcon.classList.add('fa-solid', 'fa-copy');
+                            copyBtn.appendChild(copyIcon);
+                            itemActionsDiv.appendChild(copyBtn);
+                        }
+
+                        // Move Button
+                        const moveBtn = document.createElement('button');
+                        moveBtn.className = 'btn-secondary';
+                        moveBtn.title = `移动${item.type === 'file' ? '文件' : '文件夹'}`;
+                        moveBtn.onclick = () => openMoveModal(item.name);
+                        const moveIcon = document.createElement('i');
+                        moveIcon.classList.add('fa-solid', 'fa-arrows-alt');
+                        moveBtn.appendChild(moveIcon);
+                        itemActionsDiv.appendChild(moveBtn);
+
+                        // Delete Button
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'btn-danger';
+                        deleteBtn.title = `删除${item.type === 'file' ? '文件' : '文件夹'} (将删除所有内容)`;
+                        deleteBtn.onclick = () => deleteItem(item.name);
+                        const deleteIcon = document.createElement('i');
+                        deleteIcon.classList.add('fa-solid', 'fa-trash-can');
+                        deleteBtn.appendChild(deleteIcon);
+                        itemActionsDiv.appendChild(deleteBtn);
+
+                        li.appendChild(itemInfoDiv);
+                        li.appendChild(itemActionsDiv);
+                        ul.appendChild(li);
+                    });
+                    fileList.appendChild(ul);
+                }
+            } catch (error) {
+                console.error('Failed to fetch files:', error);
+                const errorP = document.createElement('p');
+                errorP.className = 'no-items error';
+                errorP.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> 无法加载文件/文件夹列表，请检查服务器。';
+                fileList.appendChild(errorP);
+            }
+        }
+
+        async function deleteItem(itemName) {
+            if (!confirm(`确定要删除 "${itemName}" 吗？此操作不可撤销。`)) return;
+            try {
+                const response = await fetch(`/delete/${encodeURIComponent(itemName)}`, { method: 'DELETE' }); // Encode for URL
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus(uploadStatus, result.success, 'success');
+                } else {
+                    showStatus(uploadStatus, result.error, 'error');
+                }
+            } catch (error) {
+                showStatus(uploadStatus, '删除失败，请检查服务器连接。', 'error');
+            }
+        }
+
+        // --- COPY LINK (Improved feedback) ---
+        function copyLink(filename) {
+            const url = `http://${serverIp}:${httpPort}/download/${encodeURIComponent(filename)}`; // Ensure filename is URL-encoded
+            navigator.clipboard.writeText(url).then(() => {
+                showStatus(uploadStatus, '下载链接已复制到剪贴板！', 'success');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                if (window.isSecureContext) { // Check if running in a secure context (HTTPS/localhost)
+                    showStatus(uploadStatus, '复制失败！请检查浏览器权限。', 'error');
+                } else {
+                    // Fallback for non-secure contexts (e.g., direct HTTP IP access)
+                    showStatus(uploadStatus, '复制失败！非HTTPS环境下，此功能可能受限，请手动复制。', 'warning');
+                    prompt('请手动复制下载链接:', url); // Provide a prompt for manual copy
+                }
+            });
+        }
+
+        // --- Move Item Operations ---
+        function openMoveModal(itemName) {
+            currentItemToMove = itemName;
+            moveItemNameDisplay.textContent = `移动 "${itemName}" 到：`;
+            destinationFolderInput.value = ''; // Clear previous input
+            showStatus(moveStatus, '', 'info', 0); // Clear previous status
+            moveModal.classList.add('show');
+            destinationFolderInput.focus();
+        }
+
+        function closeMoveModal() {
+            moveModal.classList.remove('show');
+            currentItemToMove = null;
+        }
+
+        async function confirmMoveItem() {
+            const itemName = currentItemToMove;
+            const destinationFolder = destinationFolderInput.value.trim();
+
+            if (!destinationFolder) {
+                showStatus(moveStatus, '目标文件夹名称不能为空！', 'warning');
+                return;
+            }
+
+            showStatus(moveStatus, `正在移动 "${itemName}"...`, 'info');
+            try {
+                const response = await fetch('/api/move_item', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ item_name: itemName, destination_folder: destinationFolder })
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus(moveStatus, result.success, 'success');
+                    setTimeout(closeMoveModal, 1500); // Close modal after a short delay
+                } else {
+                    showStatus(moveStatus, result.error, 'error');
+                }
+            } catch (error) {
+                showStatus(moveStatus, '移动失败，请检查服务器连接。', 'error');
+            }
+        }
+
+
+        // --- FETCH MESSAGES (XSS FIX) ---
+        async function fetchMessages() {
+            try {
+                const response = await fetch('/api/messages');
+                if (!response.ok) throw new Error('Network response was not ok.');
+                const messages = await response.json();
+
+                messageBoardList.innerHTML = ''; // Clear previous list
+
+                if (messages.length === 0) {
+                    const noItemsP = document.createElement('p');
+                    noItemsP.className = 'no-items';
+                    noItemsP.innerHTML = '<i class="fa-solid fa-clipboard"></i> 暂无留言。';
+                    messageBoardList.appendChild(noItemsP);
+                } else {
+                    const ul = document.createElement('ul');
+                    messages.forEach(msg => {
+                        const li = document.createElement('li');
+
+                        const msgMetaDiv = document.createElement('div');
+                        msgMetaDiv.className = 'msg-meta';
+
+                        const spanInfo = document.createElement('span');
+                        const strongSender = document.createElement('strong');
+                        strongSender.textContent = msg.sender; // XSS Safe
+                        spanInfo.appendChild(strongSender);
+                        
+                        const spanTimestamp = document.createElement('span');
+                        spanTimestamp.className = 'msg-timestamp';
+                        spanTimestamp.textContent = ` ${msg.formatted_timestamp}`; // XSS Safe
+                        spanInfo.appendChild(spanTimestamp);
+                        msgMetaDiv.appendChild(spanInfo);
+
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'btn-danger';
+                        deleteBtn.title = '删除留言';
+                        deleteBtn.onclick = () => deleteMessage(msg.id);
+                        const deleteIcon = document.createElement('i');
+                        deleteIcon.classList.add('fa-solid', 'fa-trash-can');
+                        deleteBtn.appendChild(deleteIcon);
+                        msgMetaDiv.appendChild(deleteBtn);
+
+                        li.appendChild(msgMetaDiv);
+
+                        const msgContentDiv = document.createElement('div');
+                        msgContentDiv.className = 'msg-content';
+                        msgContentDiv.textContent = msg.content; // XSS Safe
+                        li.appendChild(msgContentDiv);
+
+                        ul.appendChild(li);
+                    });
+                    messageBoardList.appendChild(ul);
+                }
+            } catch (error) {
+                console.error('Failed to fetch messages:', error);
+                const errorP = document.createElement('p');
+                errorP.className = 'no-items error';
+                errorP.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> 无法加载留言板，请检查服务器。';
+                messageBoardList.appendChild(errorP);
+            }
+        }
+
+        messageBoardForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const content = messageBoardInput.value.trim();
+            if (!content) {
+                showStatus(messageBoardStatus, '留言内容不能为空！', 'warning');
+                return;
+            }
+
+            const messageData = {
+                sender: nickname,
+                content: content
+            };
+
+            try {
+                const response = await fetch('/api/messages', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(messageData)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus(messageBoardStatus, result.success, 'success');
+                    messageBoardInput.value = '';
+                } else {
+                    showStatus(messageBoardStatus, result.error, 'error');
+                }
+            } catch (error) {
+                showStatus(messageBoardStatus, '发表留言失败，请检查服务器连接。', 'error');
+            }
+        });
+
+        async function deleteMessage(id) {
+            if (!confirm(`确定要删除这条留言吗？`)) return;
+            try {
+                const response = await fetch(`/api/messages/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus(messageBoardStatus, result.success, 'success');
+                } else {
+                    showStatus(messageBoardStatus, result.error, 'error');
+                }
+            }
+            catch (error) {
+                showStatus(messageBoardStatus, '删除留言失败。', 'error');
+            }
+        }
+
+        // --- FETCH URLs (XSS FIX) ---
+        async function fetchUrls() {
+            try {
+                const response = await fetch('/api/urls');
+                if (!response.ok) throw new Error('Network response was not ok.');
+                const urls = await response.json();
+
+                urlList.innerHTML = ''; // Clear previous list
+
+                if (urls.length === 0) {
+                    const noItemsP = document.createElement('p');
+                    noItemsP.className = 'no-items';
+                    noItemsP.innerHTML = '<i class="fa-solid fa-earth-americas"></i> 暂无分享网址。';
+                    urlList.appendChild(noItemsP);
+                } else {
+                    const ul = document.createElement('ul');
+                    urls.forEach(urlItem => {
+                        const li = document.createElement('li');
+
+                        const itemInfoDiv = document.createElement('div');
+                        itemInfoDiv.className = 'item-info';
+
+                        const icon = document.createElement('i');
+                        icon.classList.add('fa-solid', 'fa-link');
+                        itemInfoDiv.appendChild(icon);
+
+                        const link = document.createElement('a');
+                        link.href = urlItem.url; // Assign URL directly
+                        link.target = '_blank';
+                        link.rel = 'noopener noreferrer';
+                        link.textContent = urlItem.title || urlItem.url; // XSS Safe
+                        itemInfoDiv.appendChild(link);
+
+                        const timestampSpan = document.createElement('span');
+                        timestampSpan.textContent = `（${urlItem.formatted_timestamp}）`; // XSS Safe
+                        itemInfoDiv.appendChild(timestampSpan);
+
+                        li.appendChild(itemInfoDiv);
+
+                        const itemActionsDiv = document.createElement('div');
+                        itemActionsDiv.className = 'item-actions';
+
+                        // Copy Button
+                        const copyBtn = document.createElement('button');
+                        copyBtn.className = 'btn-secondary';
+                        copyBtn.title = '复制网址';
+                        copyBtn.onclick = () => copyTextToClipboard(urlItem.url);
+                        const copyIcon = document.createElement('i');
+                        copyIcon.classList.add('fa-solid', 'fa-copy');
+                        copyBtn.appendChild(copyIcon);
+                        itemActionsDiv.appendChild(copyBtn);
+
+                        // Delete Button
+                        const deleteBtn = document.createElement('button');
+                        deleteBtn.className = 'btn-danger';
+                        deleteBtn.title = '删除网址';
+                        deleteBtn.onclick = () => deleteUrl(urlItem.id);
+                        const deleteIcon = document.createElement('i');
+                        deleteIcon.classList.add('fa-solid', 'fa-trash-can');
+                        deleteBtn.appendChild(deleteIcon);
+                        itemActionsDiv.appendChild(deleteBtn);
+
+                        li.appendChild(itemActionsDiv);
+                        ul.appendChild(li);
+                    });
+                    urlList.appendChild(ul);
+                }
+            } catch (error) {
+                console.error('Failed to fetch URLs:', error);
+                const errorP = document.createElement('p');
+                errorP.className = 'no-items error';
+                errorP.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i> 无法加载网址列表，请检查服务器。';
+                urlList.appendChild(errorP);
+            }
+        }
+
+        urlShareForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = urlInput.value.trim();
+            const title = urlTitleInput.value.trim();
+            if (!url) {
+                showStatus(urlShareStatus, '网址不能为空！', 'warning');
+                return;
+            }
+            // Basic URL validation
+            try {
+                new URL(url); // This will throw if URL is invalid
+            } catch (_) {
+                showStatus(urlShareStatus, '请输入有效的网址格式！例如：https://www.google.com', 'error');
+                return;
+            }
+
+            const urlData = {
+                url: url,
+                title: title
+            };
+
+            try {
+                const response = await fetch('/api/urls', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(urlData)
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus(urlShareStatus, result.success, 'success');
+                    urlInput.value = '';
+                    urlTitleInput.value = '';
+                } else {
+                    showStatus(urlShareStatus, result.error, 'error');
+                }
+            } catch (error) {
+                showStatus(urlShareStatus, '分享网址失败，请检查服务器连接。', 'error');
+            }
+        });
+
+        async function deleteUrl(id) {
+            if (!confirm(`确定要删除这个网址吗？`)) return;
+            try {
+                const response = await fetch(`/api/urls/${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (response.ok) {
+                    showStatus(urlShareStatus, result.success, 'success');
+                } else {
+                    showStatus(urlShareStatus, result.error, 'error');
+                }
+            } catch (error) {
+                showStatus(urlShareStatus, '删除网址失败。', 'error');
+            }
+        }
+
+        // --- COPY TEXT TO CLIPBOARD (Improved feedback) ---
+        function copyTextToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus(urlShareStatus, '内容已复制到剪贴板！', 'success');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                if (window.isSecureContext) {
+                    showStatus(urlShareStatus, '复制失败！请检查浏览器权限。', 'error');
+                } else {
+                    showStatus(urlShareStatus, '复制失败！非HTTPS环境下，此功能可能受限，请手动复制。', 'warning');
+                    prompt('请手动复制内容:', text); // Provide a prompt for manual copy
+                }
+            });
+        }
+
+        // --- Initialization ---
+        window.onload = () => {
+            if (!nickname) {
+                nicknameModal.classList.add('show');
+                nicknameInput.focus();
+            } else {
+                initWebSocket();
+            }
+            fetchFiles();
+            fetchMessages();
+            fetchUrls();
+            updateProfileDisplay();
+        };
+
+    </script>
+</body>
+</html>
