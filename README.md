@@ -1,10 +1,22 @@
-- 👋 Hi, I’m @yangzeqian
-- 👀 I’m interested in ...
-- 🌱 I’m currently learning ...
-- 💞️ I’m looking to collaborate on ...
-- 📫 How to reach me ...
+WiFi File Share
+A simple Python-based web application for sharing files, messages, and URLs over a local network.
 
-<!---
-yangzeqian/yangzeqian is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
-You can click the Preview link to take a look at your changes.
---->
+Features
+File Sharing: Upload, download, and manage files and folders.
+Chat: Real-time chat with other users on the network.
+Message Board: Leave and view messages from other users.
+URL Sharing: Share and access web links.
+Dark/Light Mode: Toggle between themes.
+Usage
+Server Setup
+Run launch.bat on the server machine.
+Client Access
+Ensure the client devices are on the same Wi-Fi network as the server.
+Open a web browser and go to http://192.168.1.147:5000/.
+Technical Details
+Frontend: HTML, CSS, JavaScript
+Backend: Python (Flask)
+Real-time Communication: WebSocket
+全中文，没有英语(no English)
+License
+(Specify your license here, e.g., MIT)
